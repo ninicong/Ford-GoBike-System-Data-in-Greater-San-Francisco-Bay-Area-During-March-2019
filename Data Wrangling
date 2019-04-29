@@ -1,0 +1,14 @@
+# import all packages and set plots to be embedded inline
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sb
+
+%matplotlib inline
+
+df = pd.read_csv('201903-fordgobike-tripdata.csv')
+df.head()
+
+# Copy dataframs
+df_clean = df.copy()
+
