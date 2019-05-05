@@ -1,0 +1,128 @@
+# import all packages and set plots to be embedded inline
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sb
+
+%matplotlib inline
+
+df = pd.read_csv('201903-fordgobike-tripdata.csv')
+df.head()
+
+# Data Wrangling
+# Copy dataframs
+df_clean = df.copy()
+
+# Create the "age" column
+df_clean.member_birth_year = df_clean.member_birth_year.fillna(0.0)
+df_clean.member_birth_year = df_clean.member_birth_year.astype(int)
+
+df_clean['age'] = 2019 - df_clean['member_birth_year']
+df_clean['age'].loc[df_clean['age'] == 2019] = np.nan
+
+df_clean.head()
+
+# Change data type from object to datatime type.
+df_clean.start_time = pd.to_datetime(df_clean.start_time)
+df_clean.end_time = pd.to_datetime(df_clean.end_time)
+
+df_clean.info()
+
+# Create the "day" cloumn
+df_clean['day'] = df_clean.start_time.dt.day_name()
+df_clean.head()
+
+# Create the "time" column
+df_clean['time'] = df_clean.start_time.dt.hour
+df_clean.head()
+
+# Univariate Exploration
+# univariate plot of gender
+base_color = sb.color_palette()[0]
+cat_order = df_clean['member_gender'].value_counts().index
+sb.countplot(data = df_clean, x = 'member_gender', color = base_color,
+            order = cat_order);
+
+plt.title('Number of trips taken by gender');
+plt.xlabel('Gender')
+plt.ylabel('Count');
+
+# univariate plot of age
+bin_edges = np.arange(18, 80, 2)
+plt.hist(data = df_clean, x = 'age', bins = bin_edges);
+plt.title('Usage by Age')
+plt.xlabel('Age')
+plt.ylabel('Count');
+
+# univariate plot of user type
+base_color = sb.color_palette()[0]
+cat_order = df_clean['user_type'].value_counts().index
+sb.countplot(data = df_clean, x = 'user_type', color = base_color,
+            order = cat_order);
+
+plt.title('Usage by User Type');
+plt.xlabel('User Type')
+plt.ylabel('Count');
+
+# univariate plot of time of day
+bin_edges = np.arange(0, 24, 1)
+plt.hist(data = df_clean, x = 'time', bins = bin_edges);
+plt.title('Usage by Time of Day')
+plt.xlabel('Time of Day')
+plt.ylabel('Count');
+
+# univariate plot of day of week
+day_order = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+ordered_day = pd.api.types.CategoricalDtype(ordered = True, categories = day_order)
+df_clean['day'] = df_clean['day'].astype(ordered_day)
+
+base_color = sb.color_palette()[0]
+sb.countplot(data = df_clean, x = 'day', color = base_color);
+
+plt.title('Usage by Day of Week')
+plt.xlabel('Day of Week')
+plt.ylabel('Count');
+plt.xticks(rotation = 15);
+
+# bivariate plot of gender vs. age
+sb.violinplot(data = df_clean, x = 'member_gender', y = 'age', color = base_color,
+             inner = 'quartile');
+
+plt.ylim(0,80);
+plt.title('Gender VS Age')
+plt.xlabel('Gender')
+plt.ylabel('Age');
+
+# bivariate plot of time of day VS day of week
+sb.boxplot(data = df_clean, x = 'day', y = 'time', color = base_color);
+
+plt.title('time of day VS day of week')
+plt.xlabel('Day of Week')
+plt.ylabel('Time of Day');
+plt.xticks(rotation = 15);
+
+# bivariate plot of time of day VS day of week
+g = sb.FacetGrid(data = df_clean, col = 'day', col_wrap = 3, height = 5, col_order = day_order)
+g.map(plt.hist, 'time', bins = np.arange(0,24,1));
+
+# bivariate plot of time of day VS user type
+g = sb.FacetGrid(data = df_clean, col = 'user_type', height = 5)
+g.map(plt.hist, 'time', bins = np.arange(0,24,1));
+
+# multivariate plot of time of day, day of week and user type
+sb.pointplot(data = df_clean, x = 'day', y = 'time', hue = 'user_type',
+                 linestyles = "");
+
+plt.title('Time of Day, Day of Week and User Type')
+plt.xlabel('Day of Week')
+plt.ylabel('Time of Day');
+plt.xticks(rotation = 15);
+
+# multivariate plot of time of day, day of week and user type
+sb.pointplot(data = df_clean, x = 'day', y = 'time', hue = 'member_gender', dodge = 0.3,
+                 linestyles = "");
+
+plt.title('Time of Day, Day of Week and Member Gender')
+plt.xlabel('Day of Week')
+plt.ylabel('Time of Day');
+plt.xticks(rotation = 15);
